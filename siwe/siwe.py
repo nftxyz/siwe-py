@@ -1,16 +1,17 @@
-from datetime import datetime
-import string
 import secrets
+import string
+from datetime import datetime
+from typing import List, Optional, Union
+
+import eth_account.messages
+import eth_keys
+import eth_utils
 import rfc3987
 from dateutil.parser import isoparse
 from dateutil.tz import UTC
-from typing import Optional, List, Union
+from web3 import HTTPProvider, Web3
 
-import eth_utils
-from web3 import Web3, HTTPProvider
-import eth_account.messages
-
-from .parsed import RegExpParsedMessage, ABNFParsedMessage
+from .parsed import ABNFParsedMessage, RegExpParsedMessage
 
 
 class VerificationError(Exception):
@@ -266,7 +267,7 @@ class SiweMessage:
 
         try:
             address = w3.eth.account.recover_message(message, signature=signature)
-        except eth_utils.exceptions.ValidationError:
+        except (eth_utils.exceptions.ValidationError, eth_keys.exceptions.BadSignature):
             raise InvalidSignature
 
         if address != self.address:
