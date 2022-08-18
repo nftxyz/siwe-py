@@ -105,9 +105,12 @@ class SiweMessage:
         "not_before",
         "request_id",
         "resources",
+        "_require_address",
     )
 
-    def __init__(self, message: Union[str, dict], abnf: bool = True):
+    def __init__(
+        self, message: Union[str, dict], abnf: bool = True, require_address: bool = True
+    ):
         if isinstance(message, str):
             if abnf:
                 parsed_message = ABNFParsedMessage(message=message)
@@ -148,6 +151,8 @@ class SiweMessage:
 
             setattr(self, key, value)
 
+        self._require_address = require_address
+
     def prepare_message(self) -> str:
         """
         Retrieve an EIP-4361 formatted message for signature. It is recommended to instead use
@@ -160,7 +165,7 @@ class SiweMessage:
 
         uri_field = f"URI: {self.uri}"
 
-        prefix = "\n".join([header, self.address])
+        prefix = "\n".join([header, self.address or ""])
 
         version_field = f"Version: {self.version}"
 
@@ -243,7 +248,7 @@ class SiweMessage:
         if message is None:
             missing.append("message")
 
-        if self.address is None:
+        if self._require_address and self.address is None:
             missing.append("address")
 
         if len(missing) > 0:
@@ -270,7 +275,7 @@ class SiweMessage:
         except (eth_utils.exceptions.ValidationError, eth_keys.exceptions.BadSignature):
             raise InvalidSignature
 
-        if address != self.address:
+        if self.address and address != self.address:
             raise InvalidSignature
         #     if not check_contract_wallet_signature(message=self, provider=provider):
         #         # TODO: Add error context
