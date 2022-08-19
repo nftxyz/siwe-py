@@ -228,7 +228,7 @@ class SiweMessage:
         nonce: Optional[str] = None,
         timestamp: Optional[datetime] = None,
         provider: Optional[HTTPProvider] = None,
-    ) -> None:
+    ) -> str:
         """
         Verifies the integrity of fields of this SiweMessage object by matching its signature.
 
@@ -239,7 +239,7 @@ class SiweMessage:
         default.
         :param provider: A Web3 provider able to perform a contract check, this is required if support for Smart
         Contract Wallets that implement EIP-1271 is needed.
-        :return: True if the message is valid and false otherwise
+        :return: address of the signer
         """
         message = eth_account.messages.encode_defunct(text=self.prepare_message())
         w3 = Web3(provider=provider)
@@ -279,6 +279,8 @@ class SiweMessage:
             raise InvalidSignature
         #     if not check_contract_wallet_signature(message=self, provider=provider):
         #         # TODO: Add error context
+
+        return address
 
 
 def check_contract_wallet_signature(message: SiweMessage, *, provider: HTTPProvider):
